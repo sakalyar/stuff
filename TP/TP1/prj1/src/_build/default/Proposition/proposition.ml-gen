@@ -1,0 +1,2 @@
+(** @canonical Proposition.Formule *)
+module Formule = Proposition__Formule
