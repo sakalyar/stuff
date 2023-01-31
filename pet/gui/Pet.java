@@ -29,6 +29,9 @@ import javax.swing.JTextArea;
 import javax.swing.border.EtchedBorder;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
+import javax.swing.text.BadLocationException;
+import javax.swing.text.Document;
+import javax.swing.text.PlainDocument;
 import javax.swing.JFileChooser;
 import pet.model.PetModel;
 import pet.model.StdPetModel;
@@ -192,8 +195,7 @@ public class Pet {
                 /** A COMPLETER **/
             	System.out.println("NEWTEST");  
 //            	scroller = new JScrollPane(editor);
-            	scroller.setViewportView(editor);
-            	updateStatusBar();
+            	updateScrollerAndEditorComponents();
 //            	placeComponents();
 //            	frame.add(scroller,BorderLayout.CENTER);
                 /*****************/
@@ -205,7 +207,15 @@ public class Pet {
                 public void actionPerformed(ActionEvent e) {
                     /*****************/
                     /** A COMPLETER **/
-                	System.out.println("NEWTEST2");        
+                	System.out.println("NEWTEST2");
+                	Document doc = model.getDocument();
+                	
+                	try {
+						editor.setText(doc.getText(0, doc.getLength()));
+					} catch (BadLocationException e1) {
+						// TODO Auto-generated catch block
+						e1.printStackTrace();
+					}
                     /*****************/
                 }
             }
@@ -215,20 +225,13 @@ public class Pet {
             public void actionPerformed(ActionEvent e) {
                 /*****************/
                 /** A COMPLETER **/
-            	JFileChooser fileChooser = new JFileChooser();
-                int option = fileChooser.showOpenDialog(frame);
-                try {
-	                if(option == JFileChooser.APPROVE_OPTION){
-	                   File file = fileChooser.getSelectedFile();
-	                   statusBar.setText("File Selected: " + file.getName());
-	                   model.setNewDocAndNewFile(file);
-	                }else{
-	                   statusBar.setText("Open command canceled");
-	                }
-                } catch (IOException ex) {
-                	System.out.println("CRITICAL ERROR");
-                }
-             
+            	File f = selectLoadFile();
+            	try {
+					model.setNewDocAndNewFile(f);
+					updateScrollerAndEditorComponents();
+				} catch (AssertionError | IOException asr) {
+					displayError("OPENING FILE");
+				}
                 /*****************/
             }
         });
@@ -237,6 +240,13 @@ public class Pet {
             public void actionPerformed(ActionEvent e) {
                 /*****************/
                 /** A COMPLETER **/
+            	try {
+            		model.resetCurrentDocWithCurrentFile();
+            		updateScrollerAndEditorComponents();
+				} catch (AssertionError | IOException e1) {
+					displayError("REOPENING FILE");
+				}
+    			
                 /*****************/
             }
         });
@@ -245,6 +255,18 @@ public class Pet {
             public void actionPerformed(ActionEvent e) {
                 /*****************/
                 /** A COMPLETER **/
+            	String x = editor.getText();
+            	Document doc = new PlainDocument();
+            	doc
+            	setNewDocWithoutFile(doc);
+            	try {
+					model.saveCurrentDocIntoFile(selectSaveFile());
+				} catch (IOException err) {
+					err.printStackTrace();
+					System.exit(1);
+				}
+            	
+//            	model.saveCurrentDocIntoCurrentFile(model.getDocument(), model.getFile());
                 /*****************/
             }
         });
@@ -253,6 +275,7 @@ public class Pet {
             public void actionPerformed(ActionEvent e) {
                 /*****************/
                 /** A COMPLETER **/
+//            	File f = selectSaveFile();
                 /*****************/
             }
         });
@@ -261,7 +284,8 @@ public class Pet {
             public void actionPerformed(ActionEvent e) {
                 /*****************/
                 /** A COMPLETER **/
-            	System.out.println(model.getFile().getName() + " is being closed");
+            	
+            	
                 /*****************/
             }
         });
@@ -345,7 +369,12 @@ public class Pet {
     private void updateScrollerAndEditorComponents() {
         /*****************/
         /** A COMPLETER **/
-    	
+    	try {
+			editor.setText(model.getDocument().getText(0, model.getDocument().getLength()));
+	    	scroller.setViewportView(editor);
+		} catch (BadLocationException e) {
+			displayError("DOCUMENT ERROR");
+		}
         /*****************/
     }
     
@@ -355,6 +384,7 @@ public class Pet {
     private void updateStatusBar() {
         /*****************/
         /** A COMPLETER **/
+    	
     	if (model.getFile() == null) {
     		statusBar.setText("Fichier : * <aucun>");
     	} else {
@@ -380,8 +410,10 @@ public class Pet {
                 "Voulez-vous fermer et reouvrir la fenetre courante?", "Fermeture d'une fenetre", 
                  JOptionPane.YES_NO_CANCEL_OPTION);
 		if (input == 0) {			
+		
 		}
 		else {
+		
 		}
     	
     	return false;
@@ -421,7 +453,6 @@ public class Pet {
         /** A COMPLETER **/
     	JOptionPane.showMessageDialog(frame, "Erreur pendand l'execution " + m,
                 "Swing Tester", JOptionPane.ERROR_MESSAGE);
-    	System.exit(1);
         /*****************/
     }
     
@@ -441,7 +472,22 @@ public class Pet {
      */
     private File selectSaveFile() {
         /*****************/
-        /** A COMPLETER **/return null;
+        /** A COMPLETER **/
+    	final JFileChooser fc = new JFileChooser();
+        int returnVal = fc.showOpenDialog(frame);
+        if (returnVal == JFileChooser.APPROVE_OPTION) {
+            File file = fc.getSelectedFile();
+            if (file == null) return null;
+            if (!file.canRead() || !file.canWrite()) {
+            	File f = new File(file.getName());
+            	return f;
+            }
+            return file;
+        } else {
+            System.out.println("Open command cancelled by user.");
+        }
+        System.out.println(returnVal);
+    	return null;
         /*****************/
     }
     
@@ -457,6 +503,15 @@ public class Pet {
     private File selectLoadFile() {
         /*****************/
         /** A COMPLETER **/
+    	final JFileChooser fc = new JFileChooser();
+        int returnVal = fc.showOpenDialog(frame);
+        if (returnVal == JFileChooser.APPROVE_OPTION) {
+            File file = fc.getSelectedFile();
+            return file;
+        } else {
+            System.out.println("Open command cancelled by user.");
+        }
+        System.out.println(returnVal);
     	return null;
         /*****************/
     }
