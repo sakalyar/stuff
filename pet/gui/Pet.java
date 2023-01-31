@@ -7,19 +7,29 @@ import java.awt.Font;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
+import java.awt.event.WindowListener;
+import javax.swing.WindowConstants;
 import java.io.File;
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
 import javax.swing.BorderFactory;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
+import javax.swing.JMenu;
+import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 import javax.swing.border.EtchedBorder;
-
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
+import javax.swing.JFileChooser;
 import pet.model.PetModel;
 import pet.model.StdPetModel;
 
@@ -31,7 +41,8 @@ public class Pet {
     private JScrollPane scroller;
     private PetModel model;
     private Map<Item, JMenuItem> menuItems;
-
+    private JMenuBar menuBar = new JMenuBar();
+    
     // CONSTRUCTEUR
     
     public Pet() {
@@ -61,7 +72,7 @@ public class Pet {
     private void createView() {
         final Dimension prefSize = new Dimension(640, 480);
         final int fontSize = 14;
-
+        System.out.println("OLDTEST");
         frame = new JFrame("Petit Éditeur de Texte");
         frame.setPreferredSize(prefSize);
         
@@ -85,13 +96,9 @@ public class Pet {
         /*****************/
         /** A COMPLETER **/
     	Map<Item, JMenuItem> menuMap = new HashMap<Item, JMenuItem>();
-    	for (Menu menu : Menu.values()) {
-    		JMenuItem currentItem = new JMenuItem(menu.label());
-    		for (Item item : Item.values()) {
-    			menuMap.put(item, currentItem);
-    		}
+    	for (Item item : Item.values()) {
+    		menuMap.put(item, new JMenuItem(item.label()));
     	}
-    	System.out.println(menuMap.toString());
     	return menuMap;
         /*****************/
     }
@@ -104,6 +111,22 @@ public class Pet {
         /*****************/
         /** A COMPLETER **/
     	
+    	for (Menu menu : Menu.values()) {
+    		JMenu newMenu = new JMenu(menu.label());
+    		for (Item it : menu.STRUCT.get(menu)) {
+    			JMenuItem item;
+    			if (it != null) {
+    				item = menuItems.get(it);
+    				newMenu.add(item);
+    			}
+    			else {
+    				newMenu.addSeparator();
+    			}
+    		}
+    		menuBar.add(newMenu);
+    	}
+    	frame.add(menuBar, BorderLayout.NORTH);
+    	frame.setVisible (true);
         /*****************/
     }
     
@@ -123,7 +146,10 @@ public class Pet {
         
         frame.add(p, BorderLayout.SOUTH);
     }
-    
+    private void refresh() {
+		// TODO Auto-generated method stub
+		
+	}
     private void createController() {
         /*
          * L'opération de fermeture par défaut ne doit rien faire car on se
@@ -132,6 +158,15 @@ public class Pet {
          */
         /*****************/
         /** A COMPLETER **/
+    	
+    	
+    	frame.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
+    	frame.addWindowListener(new WindowAdapter() {
+    		public void windowClosing(WindowEvent ev) {
+    			System.out.println("CLOSING WINDOW: ");
+    			System.exit(0);
+    		}
+    	});
         /*****************/
         
         /*
@@ -139,6 +174,12 @@ public class Pet {
          */
         /*****************/
         /** A COMPLETER **/
+    	model.addChangeListener(new ChangeListener() {
+    		@Override
+    		public void stateChanged(ChangeEvent e) {
+    			refresh();
+    		}
+    	});
         /*****************/
         
         /*
@@ -149,8 +190,14 @@ public class Pet {
             public void actionPerformed(ActionEvent e) {
                 /*****************/
                 /** A COMPLETER **/
+            	System.out.println("NEWTEST");  
+//            	scroller = new JScrollPane(editor);
+            	scroller.setViewportView(editor);
+            	updateStatusBar();
+//            	placeComponents();
+//            	frame.add(scroller,BorderLayout.CENTER);
                 /*****************/
-            }
+            }//
         });
         menuItems.get(Item.NEW_FROM_FILE).addActionListener(
             new ActionListener() {
@@ -158,6 +205,7 @@ public class Pet {
                 public void actionPerformed(ActionEvent e) {
                     /*****************/
                     /** A COMPLETER **/
+                	System.out.println("NEWTEST2");        
                     /*****************/
                 }
             }
@@ -167,6 +215,20 @@ public class Pet {
             public void actionPerformed(ActionEvent e) {
                 /*****************/
                 /** A COMPLETER **/
+            	JFileChooser fileChooser = new JFileChooser();
+                int option = fileChooser.showOpenDialog(frame);
+                try {
+	                if(option == JFileChooser.APPROVE_OPTION){
+	                   File file = fileChooser.getSelectedFile();
+	                   statusBar.setText("File Selected: " + file.getName());
+	                   model.setNewDocAndNewFile(file);
+	                }else{
+	                   statusBar.setText("Open command canceled");
+	                }
+                } catch (IOException ex) {
+                	System.out.println("CRITICAL ERROR");
+                }
+             
                 /*****************/
             }
         });
@@ -199,6 +261,7 @@ public class Pet {
             public void actionPerformed(ActionEvent e) {
                 /*****************/
                 /** A COMPLETER **/
+            	System.out.println(model.getFile().getName() + " is being closed");
                 /*****************/
             }
         });
@@ -215,6 +278,7 @@ public class Pet {
             public void actionPerformed(ActionEvent e) {
                 /*****************/
                 /** A COMPLETER **/
+//            	dispose();
                 /*****************/
             }
         });
@@ -227,6 +291,48 @@ public class Pet {
     private void setItemsEnabledState() {
         /*****************/
         /** A COMPLETER **/
+    	JMenu m;
+		JMenuItem it;
+    	
+//    	m = menuBar.getMenu(0);
+//		it = m.getItem(3);
+//    	
+//    	if (model.getFile() == null && model.getDocument() == null && !model.isSynchronized()) {
+//    		
+//    		it.setEnabled(false);
+//    		it = m.getItem(4);
+//    		it.setEnabled(false);
+//    	} else {
+//    		it.setEnabled(true);
+//    		it = m.getItem(4);
+//    		it.setEnabled(true);
+//    	}
+    	
+    	m = menuBar.getMenu(0);
+		it = m.getItem(5);
+    	
+    	if (model.getDocument() == null) {
+    		
+//    		System.out.println(it.toString());
+//    		it.setEnabled(false);
+//    		it = m.getItem(6);
+//    		it.setEnabled(false);
+    	} else {
+//    		it.setEnabled(true);
+//    		it = m.getItem(6);
+//    		it.setEnabled(true);
+    	}
+    	
+    	m = menuBar.getMenu(1);
+		it = m.getItem(0);
+		
+    	if (model.getFile() == null) {    		
+    		it.setEnabled(false);
+    	} else {
+    		it.setEnabled(true);
+    	}
+    	
+    	
         /*****************/
     }
     
@@ -239,6 +345,7 @@ public class Pet {
     private void updateScrollerAndEditorComponents() {
         /*****************/
         /** A COMPLETER **/
+    	
         /*****************/
     }
     
@@ -248,6 +355,11 @@ public class Pet {
     private void updateStatusBar() {
         /*****************/
         /** A COMPLETER **/
+    	if (model.getFile() == null) {
+    		statusBar.setText("Fichier : * <aucun>");
+    	} else {
+    		statusBar.setText(model.getFile().getName());
+    	}
         /*****************/
     }
     
@@ -263,6 +375,15 @@ public class Pet {
     private boolean confirmAction() {
         /*****************/
         /** A COMPLETER **/
+    	
+    	int input = JOptionPane.showConfirmDialog(null, 
+                "Voulez-vous fermer et reouvrir la fenetre courante?", "Fermeture d'une fenetre", 
+                 JOptionPane.YES_NO_CANCEL_OPTION);
+		if (input == 0) {			
+		}
+		else {
+		}
+    	
     	return false;
         /*****************/
     }
@@ -280,7 +401,16 @@ public class Pet {
     private boolean confirmReplaceContent(File f) {
         /*****************/
         /** A COMPLETER **/
-        /*****************/return false;
+    	if (f == null)
+    		return true;
+    	
+    	int input = JOptionPane.showConfirmDialog(null, 
+                "Voulez-vous fermer remplacer le contenu du fichier courant?", "Remplacement du document", 
+                 JOptionPane.YES_NO_CANCEL_OPTION);
+		if (input == 0)
+			return true;
+        /*****************/
+		return false;
     }
     /**
      * Toute erreur inexpliquée de l'application doit être interceptée et
@@ -289,6 +419,9 @@ public class Pet {
     private void displayError(String m) {
         /*****************/
         /** A COMPLETER **/
+    	JOptionPane.showMessageDialog(frame, "Erreur pendand l'execution " + m,
+                "Swing Tester", JOptionPane.ERROR_MESSAGE);
+    	System.exit(1);
         /*****************/
     }
     

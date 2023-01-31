@@ -7,9 +7,11 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 
+import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
+import javax.swing.event.EventListenerList;
 import javax.swing.text.BadLocationException;
 import javax.swing.text.Document;
 import javax.swing.text.PlainDocument;
@@ -24,6 +26,8 @@ public class StdPetModel implements PetModel {
     private File file;
     private boolean sync;
     private DocumentListener docListener;
+    private EventListenerList listeners;
+    private ChangeEvent event;
 
     // CONSTRUCTEURS
     
@@ -31,6 +35,7 @@ public class StdPetModel implements PetModel {
         document = null;
         file = null;
         sync = false;
+        listeners = new EventListenerList();
         docListener = new DocumentListener() {
             @Override
             public void changedUpdate(DocumentEvent e) {
@@ -68,7 +73,7 @@ public class StdPetModel implements PetModel {
     
     @Override
     public void clearDocument() {
-//        Contract.checkCondition(document != null);
+        Contract.checkCondition(document != null);
         
         setText("", document);
         setSyncAndNotify(false);
@@ -247,6 +252,16 @@ public class StdPetModel implements PetModel {
         sync = on;
         /*******************************************************/
         /** A COMPLETER avec la notification des observateurs **/
+//        
+        Object[] lst = listeners.getListenerList();
+        for (int i = lst.length - 2; i >= 0; i -= 2) {
+	        if (lst[i] == ChangeListener.class) {
+		        if (event == null) {
+		        	event = new ChangeEvent(this);
+	        }
+		    ((ChangeListener) lst[i + 1]).stateChanged(event);
+        	}
+	    }
         /*******************************************************/
     }
     
@@ -261,19 +276,16 @@ public class StdPetModel implements PetModel {
 
 	@Override
 	public ChangeListener[] getChangeListeners() {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
-	public void addChangeListener(ChangeListener listener) {
-		// TODO Auto-generated method stub
-		
+		return listeners.getListeners(ChangeListener.class);
 	}
 
 	@Override
 	public void removeChangeListener(ChangeListener listener) {
-		// TODO Auto-generated method stub
-		
+		listeners.remove(ChangeListener.class, listener);
+	}
+
+	@Override
+	public void addChangeListener(ChangeListener listener) {
+		listeners.add(ChangeListener.class, listener);
 	}
 }
