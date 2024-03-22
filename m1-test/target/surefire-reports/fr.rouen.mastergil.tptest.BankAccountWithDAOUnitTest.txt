@@ -1,0 +1,8 @@
+-------------------------------------------------------------------------------
+Test set: fr.rouen.mastergil.tptest.BankAccountWithDAOUnitTest
+-------------------------------------------------------------------------------
+Tests run: 2, Failures: 0, Errors: 1, Skipped: 0, Time elapsed: 0.119 s <<< FAILURE! - in fr.rouen.mastergil.tptest.BankAccountWithDAOUnitTest
+shouldCreerCompteNonVide  Time elapsed: 0.011 s  <<< ERROR!
+java.lang.NullPointerException: Cannot invoke "fr.rouen.mastergil.tptest.JdbcDAO.getSolde()" because "this.bankDao" is null
+	at fr.rouen.mastergil.tptest.BankAccountWithDAOUnitTest.shouldCreerCompteNonVide(BankAccountWithDAOUnitTest.java:41)
+
